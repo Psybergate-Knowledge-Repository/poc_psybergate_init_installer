@@ -1,0 +1,17 @@
+{
+  "name": "psybergate-install",
+  "version": "1.0.0",
+  "description": "Installer for the Psybergate Project Initialiser CLI",
+  "type": "module",
+  "bin": {
+    "psybergate-install": "index.js"
+  },
+  "files": [
+    "index.js"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": [],
+  "license": "UNLICENSED"
+}
