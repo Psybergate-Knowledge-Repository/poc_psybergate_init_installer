@@ -2,10 +2,11 @@
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
-param(
-    [Parameter(Mandatory=$true)]
-    [string]$Token
-)
+$Token = $env:PSYBERGATE_TOKEN
+if (-not $Token) {
+    Write-Host "Error: Install token not set. See the private repo for install instructions." -ForegroundColor Red
+    exit 1
+}
 
 Write-Host ""
 Write-Host "  Psybergate Initialiser - Setup" -ForegroundColor DarkYellow
