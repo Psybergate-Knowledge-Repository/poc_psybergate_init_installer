@@ -5,7 +5,7 @@ Sets up your machine to use the Psybergate Project Initialiser CLI.
 ## Usage
 
 ```bash
-npx psybergate-install
+npx github:Psybergate-Knowledge-Repository/poc_psybergate_init_installer
 ```
 
 A browser window will open and ask you to authorise with GitHub. Once authorised, the installer will:
