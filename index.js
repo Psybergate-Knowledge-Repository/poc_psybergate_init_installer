@@ -2,7 +2,7 @@
 
 import https from 'https';
 import { execSync } from 'child_process';
-import { existsSync, readFileSync, writeFileSync } from 'fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
 import { homedir } from 'os';
 import { join } from 'path';
 import { exec } from 'child_process';
@@ -16,8 +16,9 @@ const BOLD = '\x1b[1m';
 
 const GITHUB_CLIENT_ID = 'Ov23lil2axwgTdsRN1BX';
 const GITHUB_SCOPE = 'read:packages';
+const CREDENTIALS_PATH = join(homedir(), '.psybergate', 'credentials.json');
 
-// ── HTTP helpers ─────────────────────────────────────────────────────────────
+// -- HTTP helpers -------------------------------------------------------------
 
 function post(url, body, headers = {}) {
   return new Promise((resolve, reject) => {
@@ -76,14 +77,25 @@ function openBrowser(url) {
   exec(cmd, () => {});
 }
 
-// ── Device flow ───────────────────────────────────────────────────────────────
+// -- Credential cache ---------------------------------------------------------
+
+function saveCredentials(username, token) {
+  try {
+    mkdirSync(join(homedir(), '.psybergate'), { recursive: true });
+    writeFileSync(CREDENTIALS_PATH, JSON.stringify({ username, token }, null, 2) + '\n', { mode: 0o600 });
+  } catch {
+    // best-effort
+  }
+}
+
+// -- Device flow --------------------------------------------------------------
 
 function renderBox(lines) {
   process.stdout.write('\x1b[2J\x1b[H');
   process.stdout.write(`${ORANGE}PSYBERGATE INSTALLER - GITHUB AUTH${RESET}\n\n`);
-  process.stdout.write(`${ORANGE}┌─ Device Flow${RESET}\n`);
-  for (const line of lines) process.stdout.write(`│  ${line}\n`);
-  process.stdout.write(`${ORANGE}└${RESET}\n`);
+  process.stdout.write(`${ORANGE}+- Device Flow${RESET}\n`);
+  for (const line of lines) process.stdout.write(`|  ${line}\n`);
+  process.stdout.write(`${ORANGE}+${RESET}\n`);
 }
 
 async function runDeviceFlow() {
@@ -128,7 +140,7 @@ async function runDeviceFlow() {
         `Open:  ${ORANGE}${deviceCode.verification_uri}${RESET}`,
         `Code:  ${ORANGE}${deviceCode.user_code}${RESET}`,
         ``,
-        `${GREEN}✔ Authorised! Resolving username...${RESET}`,
+        `${GREEN}Authorised! Resolving username...${RESET}`,
       ]);
 
       const user = await get('https://api.github.com/user', {
@@ -141,35 +153,35 @@ async function runDeviceFlow() {
         `Open:  ${ORANGE}${deviceCode.verification_uri}${RESET}`,
         `Code:  ${ORANGE}${deviceCode.user_code}${RESET}`,
         ``,
-        `${GREEN}✔ Authorised as ${user.login}${RESET}`,
+        `${GREEN}Authorised as ${user.login}${RESET}`,
       ]);
 
       await sleep(800);
+      saveCredentials(user.login, poll.access_token);
       return poll.access_token;
     }
 
     if (poll.error === 'slow_down') { interval = (poll.interval ?? interval) + 5; continue; }
     if (poll.error === 'authorization_pending') continue;
     if (poll.error === 'expired_token') {
-      renderBox([`${RED}✖ Device code expired. Please re-run and try again.${RESET}`]);
+      renderBox([`${RED}Device code expired. Please re-run and try again.${RESET}`]);
       throw new Error('GitHub device code expired');
     }
 
-    renderBox([`${RED}✖ Auth error: ${poll.error_description ?? poll.error}${RESET}`]);
+    renderBox([`${RED}Auth error: ${poll.error_description ?? poll.error}${RESET}`]);
     throw new Error(`GitHub auth failed: ${poll.error}`);
   }
 
-  renderBox([`${RED}✖ Timed out waiting for authorisation.${RESET}`]);
+  renderBox([`${RED}Timed out waiting for authorisation.${RESET}`]);
   throw new Error('GitHub device flow timed out');
 }
 
-// ── Main ──────────────────────────────────────────────────────────────────────
+// -- Main ---------------------------------------------------------------------
 
 process.stdout.write('\x1b[2J\x1b[H');
 console.log(`${ORANGE}${BOLD}  Psybergate Installer${RESET}`);
 console.log(`${DIM}  Authenticating with GitHub to configure npm for GitHub Packages...${RESET}\n`);
 
-// Check Node version
 const nodeVersion = parseInt(process.versions.node.split('.')[0]);
 if (nodeVersion < 18) {
   console.error(`${RED}Error: Node.js 18+ required (you have ${process.versions.node}).${RESET}`);
@@ -188,7 +200,6 @@ try {
 process.stdout.write('\x1b[2J\x1b[H');
 console.log(`${ORANGE}${BOLD}  Psybergate Installer${RESET}\n`);
 
-// Configure ~/.npmrc
 const npmrc = join(homedir(), '.npmrc');
 let lines = [];
 if (existsSync(npmrc)) {
@@ -200,18 +211,9 @@ lines.push(`//npm.pkg.github.com/:_authToken=${token}`);
 lines.push('@psybergate-knowledge-repository:registry=https://npm.pkg.github.com');
 writeFileSync(npmrc, lines.join('\n') + '\n');
 
-console.log(`${GREEN}✔ npm configured for GitHub Packages${RESET}`);
+console.log(`${GREEN}npm configured for GitHub Packages${RESET}`);
+console.log(`${GREEN}Credentials saved to ~/.psybergate/credentials.json${RESET}`);
 
-// Check Spring Boot CLI
-try {
-  const version = execSync('spring --version', { stdio: 'pipe' }).toString().trim();
-  console.log(`${GREEN}✔ Spring Boot CLI found: ${version}${RESET}`);
-} catch {
-  console.warn(`${DIM}⚠ Spring Boot CLI not found (optional)${RESET}`);
-  console.warn(`${DIM}  Install from: https://docs.spring.io/spring-boot/docs/current/reference/html/cli.html${RESET}`);
-}
-
-// Install the CLI
 console.log(`\n${DIM}Installing @psybergate-knowledge-repository/initialiser...${RESET}`);
 execSync('npm install -g @psybergate-knowledge-repository/initialiser', { stdio: 'inherit' });
 
