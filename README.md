@@ -1,5 +1,26 @@
-# Psybergate Initialiser
+# Psybergate Installer
 
-For installation instructions and your install token, see the private repo:
+Sets up your machine to use the Psybergate Project Initialiser CLI.
 
-**[poc_psybergate_project_initialiser](https://github.com/Psybergate-Knowledge-Repository/poc_psybergate_project_initialiser)** *(Psybergate org members only)*
+## Usage
+
+```bash
+npx psybergate-install
+```
+
+A browser window will open and ask you to authorise with GitHub. Once authorised, the installer will:
+
+1. Configure `~/.npmrc` for GitHub Packages
+2. Check for Spring Boot CLI (optional)
+3. Install `psybergate-init` globally
+
+Then run:
+
+```bash
+psybergate-init
+```
+
+## Requirements
+
+- Node.js 18+
+- A GitHub account that is a member of the Psybergate organisation
