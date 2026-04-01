@@ -214,9 +214,9 @@ writeFileSync(npmrc, lines.join('\n') + '\n');
 console.log(`${GREEN}npm configured for GitHub Packages${RESET}`);
 console.log(`${GREEN}Credentials saved to ~/.psybergate/credentials.json${RESET}`);
 
-const PACKAGE = '@psybergate-knowledge-repository/initialiser';
+const PACKAGE = '@psybergate-knowledge-repository/initialiser@dev';
 
-console.log(`\n${DIM}Installing ${PACKAGE}...${RESET}`);
+console.log(`\n${DIM}Installing ${PACKAGE} (dev channel)...${RESET}`);
 try {
   // --force skips cleanup of the old package directory, avoiding EPERM errors
   // on Windows when files from the previous install are still locked.
@@ -229,3 +229,4 @@ try {
 }
 
 console.log(`\n${GREEN}${BOLD}Done!${RESET} Run ${ORANGE}psybergate-init${RESET} to create a new project.\n`);
+console.log(`${DIM}You are on the dev channel. Upgrade to stable: npx github:Psybergate-Knowledge-Repository/poc_psybergate_init_installer${RESET}\n`);
