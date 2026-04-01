@@ -5,7 +5,7 @@ import { execSync } from 'child_process';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
 import { homedir } from 'os';
 import { join } from 'path';
-import { exec } from 'child_process';
+import { spawn } from 'child_process';
 
 const ORANGE = '\x1b[38;2;255;165;0m';
 const DIM = '\x1b[2m';
@@ -68,13 +68,13 @@ function sleep(ms) {
 }
 
 function openBrowser(url) {
-  const cmd =
+  const [cmd, ...args] =
     process.platform === 'win32'
-      ? `start "" "${url}"`
+      ? ['cmd', '/c', 'start', '', url]
       : process.platform === 'darwin'
-        ? `open "${url}"`
-        : `xdg-open "${url}"`;
-  exec(cmd, () => {});
+        ? ['open', url]
+        : ['xdg-open', url];
+  spawn(cmd, args, { stdio: 'ignore', detached: true }).unref();
 }
 
 // -- Credential cache ---------------------------------------------------------
@@ -214,7 +214,18 @@ writeFileSync(npmrc, lines.join('\n') + '\n');
 console.log(`${GREEN}npm configured for GitHub Packages${RESET}`);
 console.log(`${GREEN}Credentials saved to ~/.psybergate/credentials.json${RESET}`);
 
-console.log(`\n${DIM}Installing @psybergate-knowledge-repository/initialiser...${RESET}`);
-execSync('npm install -g @psybergate-knowledge-repository/initialiser', { stdio: 'inherit' });
+const PACKAGE = '@psybergate-knowledge-repository/initialiser';
+
+console.log(`\n${DIM}Installing ${PACKAGE}...${RESET}`);
+try {
+  // --force skips cleanup of the old package directory, avoiding EPERM errors
+  // on Windows when files from the previous install are still locked.
+  execSync(`npm install -g ${PACKAGE} --force`, { stdio: 'inherit' });
+} catch {
+  console.error(`\n${RED}Installation failed.${RESET}`);
+  console.error(`Try running manually:\n  npm install -g ${PACKAGE} --force`);
+  console.error(`If that still fails, close any terminals that may be using psybergate-init and try again.`);
+  process.exit(1);
+}
 
 console.log(`\n${GREEN}${BOLD}Done!${RESET} Run ${ORANGE}psybergate-init${RESET} to create a new project.\n`);
