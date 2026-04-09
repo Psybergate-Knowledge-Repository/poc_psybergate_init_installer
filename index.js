@@ -229,4 +229,3 @@ try {
 }
 
 console.log(`\n${GREEN}${BOLD}Done!${RESET} Run ${ORANGE}psybergate-init${RESET} to create a new project.\n`);
-console.log(`${DIM}Need the dev channel instead? Run: npx github:Psybergate-Knowledge-Repository/poc_psybergate_init_installer#dev${RESET}\n`);

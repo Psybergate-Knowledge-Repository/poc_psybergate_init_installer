@@ -8,14 +8,6 @@ Sets up your machine to use the Psybergate Project Initialiser CLI.
 npx github:Psybergate-Knowledge-Repository/poc_psybergate_init_installer
 ```
 
-This installs the latest stable initialiser (`@latest`).
-
-To install the dev channel instead:
-
-```bash
-npx github:Psybergate-Knowledge-Repository/poc_psybergate_init_installer#dev
-```
-
 A browser window will open and ask you to authorise with GitHub. Once authorised, the installer will:
 
 1. Configure `~/.npmrc` for GitHub Packages
